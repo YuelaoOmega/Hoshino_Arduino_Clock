@@ -607,10 +607,11 @@ const unsigned char* framesNight[4] = {
 };
 
 
+
 //RTC针脚
-#define TIME_RST_PIN 5
-#define TIME_DAT_PIN 3
-#define TIME_CLK_PIN 4
+#define TIME_RST_PIN 3
+#define TIME_DAT_PIN 4
+#define TIME_CLK_PIN 5
 
 //温度传感器针脚
 #define TMP_PIN 2
@@ -619,89 +620,19 @@ const unsigned char* framesNight[4] = {
 #define SCR_SDA_PIN 7
 #define SCR_SCL_PIN 6
 
-//构造显示屏对象
+//音响针脚
+#define AUD_CHANNEL_1_PIN 8
+#define AUD_CHANNEL_2_PIN 9
+#define AUD_CHANNEL_3_PIN 10
+#define AUD_CHANNEL_4_PIN 11
+
+//硬件对象构造
 U8G2_SSD1309_128X64_NONAME0_F_SW_I2C screen(U8G2_R0, SCR_SCL_PIN, SCR_SDA_PIN);
-
-//定义rtc模块
 DS1302 rtc(TIME_RST_PIN,TIME_DAT_PIN,TIME_CLK_PIN);
-
-//定义温度模块
 OneWire oneWire(TMP_PIN);
 DallasTemperature temperatureSensor(&oneWire);
 
-//获得编译时间的
-void get_Compile_Time(int* year, int* month, int* day, int* hour, int* minute, int* second) {
-  char compileDate[] = __DATE__;
-  char compileTime[] = __TIME__;
-
-  char monthStr[4];
-  strncpy(monthStr, compileDate, 3);
-  monthStr[3] = '\0';
-
-  const char* months[] = {"Jan","Feb","Mar","Apr","May","Jun",
-                         "Jul","Aug","Sep","Oct","Nov","Dec"};
-  *month = 0;
-  for (int i = 0; i < 12; i++) {
-    if (strcmp(monthStr, months[i]) == 0) { // 修复条件
-      *month = i + 1;
-      break;
-    }
-  }
-
-  //解析日期时间
-  sscanf(compileDate + 4, "%d %d", day, year);
-  sscanf(compileTime, "%d:%d:%d", hour, minute, second);
-}
-
-//计算这天是周几的
-int week_day(unsigned int yr,unsigned int mn,unsigned int day){
-  int week = 0;
-  if(mn == 1 || mn == 2){
-    mn += 12;
-    yr--;
-  }
-  //基姆拉尔森计算公式
-  week = ( day + 2 * mn + 3 * ( mn + 1 ) / 5 + yr + yr / 4 - yr / 100 + yr / 400) % 7;
-  return week + 1; 
-}
-
-//初始化时钟
-void init_RTC_Time(void){
-  rtc.writeProtect(false);
-  rtc.halt(false);
-
-  int compileYear, compileMonth, compileDay;
-  int compileHour, compileMinute, compileSecond;
-  
-  get_Compile_Time(&compileYear, &compileMonth, &compileDay,
-              &compileHour, &compileMinute, &compileSecond);
-
-  int weekday = week_day(compileYear,compileMonth,compileDay);
-      
-  Time t(compileYear, compileMonth, compileDay, compileHour, compileMinute, compileSecond, weekday);
-
-  rtc.time(t); // 写入时间
-}
-
-//初始化屏幕
-void screen_prepare(void) {
-  screen.setFontRefHeightExtendedText();
-  screen.setDrawColor(1);
-  screen.setFontPosTop();
-  screen.setFontDirection(0);
-  screen.setPowerSave(0);
-
-}
-
-//温度获取
-int get_temp_now(DallasTemperature sensor){
-  sensor.requestTemperatures();
-  return sensor.getTempCByIndex(0);
-}
-
-
-
-// ========== 全局变量区 ==========
+//========== 全局变量区 ==========
 const int FRAME_DELAY = 32;  // 帧间隔 (ms)
 const int DAY_FRAMES = 8;    // 日间动画总帧数
 const int NIGHT_FRAMES = 4;  // 夜间动画总帧数
@@ -713,8 +644,10 @@ int currentFrameNight = 0;
 int currentFrameTrans = 0;
 int currentFrameTransRe = 0;
 
+unsigned long lastUpdateTemp = 0;
 unsigned long lastUpdateDay = 0;
 unsigned long lastUpdateNight = 0;
+int int_Temp;
 
 
 //判断变量
@@ -726,6 +659,20 @@ enum SystemState {
 };
 
 SystemState systemState = STATE_DAY; // 新增状态枚举
+bool temperatureRequested = false;
+
+//音频初始化
+//
+
+//初始化屏幕
+void screen_prepare(void) {
+  screen.setFontRefHeightExtendedText();
+  screen.setDrawColor(1);
+  screen.setFontPosTop();
+  screen.setFontDirection(0);
+  screen.setPowerSave(0);
+
+}
 
 //状态机
 void considerState(){
@@ -757,8 +704,7 @@ void reset_all_frame(){
   currentFrameTransRe = 0;
 }
 
-
-//====================动画函数
+//=========== 动画函数 ============
 void draw_anime_night() {
   if (millis() - lastUpdateNight > FRAME_DELAY) {
     lastUpdateNight = millis();
@@ -805,38 +751,44 @@ void draw_transition_re() {
       currentFrameTransRe = 0;
     }
   }
-
-
 }
-
-
 
 //===================主程序
 
 void setup() {
-
+  //由于内存原因，第一次使用的时候先运行checkTime校准RTC即可
+  //在另一个文件里
   //调试端口，完成开发后注释
   Serial.begin(9600);
-  
+
   // 初始化U8g2
   screen.begin();          
   screen_prepare();
-
+  
+  
   //启动温度
   temperatureSensor.begin();
-
+  //在这里请求第一次温度
+  temperatureSensor.requestTemperatures();
+  temperatureRequested = true;
   
-  //初始化RTC-第一次跑才不注释
-  //init_RTC_Time();
-
 }
 
 void loop() { 
+  if (temperatureRequested) {
+      if (millis() - lastUpdateTemp >= 1000) {
+          int_Temp = temperatureSensor.getTempCByIndex(0);
+          temperatureRequested = false; // 完成温度读取
+        
+          temperatureSensor.requestTemperatures();
+          lastUpdateTemp = millis();
+          temperatureRequested = true;
+      }
+  }
+
   considerState();
-  
   screen.clearBuffer();
  
-  //get_info_and_update_now(rtc,temperatureSensor); 
 
   Time now = rtc.time();
   char bufDate[20];
@@ -874,7 +826,7 @@ void loop() {
   snprintf(bufTime, sizeof(bufTime), "%02d:%02d:%02d",
             now.hr, now.min, now.sec);
   snprintf(bufTemp, sizeof(bufTemp), "Temp:%02d",
-            get_temp_now(temperatureSensor));
+            int_Temp);
   
   
   
@@ -888,7 +840,7 @@ void loop() {
   screen.drawStr(0,25,dayNow);
   screen.setFont(u8g2_font_7x13_tf);
   screen.drawStr(0,50,bufTemp);
-  
+  //=============================渲染动画
 
   switch(systemState) {
     case STATE_DAY:        
