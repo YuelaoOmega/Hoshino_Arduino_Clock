@@ -14,10 +14,10 @@
 
 如何使用？
 -
-1 先接好相应的接线，连接你的Arduino，打开**Serial Monitor**，**Brand**设为**9600**
-2 将**Checktime**上传并运行
-3 等待 **Serial Monitor** 输出 **Okay**
-4 将主程序写入
+1. 先接好相应的接线，连接你的Arduino，打开`Serial Monitor`，`Brand`设为`9600`
+2. 将`Checktime`上传并运行
+3. 等待`Serial Monitor` 输出 **Okay**
+4. 将主程序写入
 
 就像一个普通的电子钟一样，上面会播放动画，动画会随时间改变（两种状态）
 
