@@ -4,9 +4,9 @@
 #include<DS1302.h>
 
 //RTC针脚
-#define TIME_RST_PIN 5
-#define TIME_DAT_PIN 3
-#define TIME_CLK_PIN 4
+#define TIME_RST_PIN 3
+#define TIME_DAT_PIN 4
+#define TIME_CLK_PIN 5
 
 //定义rtc模块
 DS1302 rtc(TIME_RST_PIN,TIME_DAT_PIN,TIME_CLK_PIN);
