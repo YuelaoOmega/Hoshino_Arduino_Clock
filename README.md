@@ -1,4 +1,4 @@
-这个项目目前还差一点完成
+# Hoshino Arduino Clock
 
 硬件如下
 -
@@ -14,9 +14,9 @@
 
 如何使用？
 -
-1 先接好相应的接线，连接你的Arduino，打开Serial Monitor，Brand设为9600
-2 将Checktime上传并运行
-3 等待Serial Monitor输出 Okay
+1 先接好相应的接线，连接你的Arduino，打开**Serial Monitor**，**Brand**设为**9600**
+2 将**Checktime**上传并运行
+3 等待 **Serial Monitor** 输出 **Okay**
 4 将主程序写入
 
 就像一个普通的电子钟一样，上面会播放动画，动画会随时间改变（两种状态）
@@ -33,6 +33,7 @@
 
 
 有什么问题/建议欢迎提交ISSUE
+该项目开源协议以License为主，其余不做过多赘述
 图有的是描的有的是自己画的
 
 喜欢的话可以为这个仓库点个Star毕竟它写起来真的超级不容易TWT
