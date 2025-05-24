@@ -23,6 +23,16 @@
 
 具体可以在代码里看到（应该没人会想读这坨长达911行的石山的
 
+涉及的库
+-
+1. Arduino.h [点击跳转](https://github.com/arduino/ArduinoCore-avr)
+2. OneWire.h [点击跳转](https://github.com/PaulStoffregen/OneWire)
+3. Rtc by Makuna [点击跳转](https://github.com/Makuna/Rtc/wiki)
+4. DallasTemperature [点击跳转](https://github.com/milesburton/Arduino-Temperature-Control-Library)
+5. U8g2 [点击跳转](https://github.com/olikraus/u8g2)
+
+能找到来源的我全都找到了TwT
+如果有遗漏的欢迎issue补充
 
 涉及角色
 -
