@@ -1,5 +1,12 @@
 # Hoshino Arduino Clock
 
+
+它能做什么？
+-
+1. 显示时间
+2. 根据温度播放音频
+3. 播放动画并根据时间切换
+
 硬件如下
 -
 开发板:Arduino UNO
