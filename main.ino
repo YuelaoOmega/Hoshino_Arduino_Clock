@@ -662,7 +662,14 @@ SystemState systemState = STATE_DAY; // 新增状态枚举
 bool temperatureRequested = false;
 
 //音频初始化
-//
+void audio_setup(){
+  //高电平触发播放
+  pinMode(8, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
+}
+
 
 //初始化屏幕
 void screen_prepare(void) {
@@ -688,9 +695,11 @@ void considerState(){
   }
 
   if (isNight != lastNightState) {
+
     reset_all_frame();
     systemState = isNight ? STATE_TRANS_NIGHT_TO_DAY : STATE_TRANS_DAY_TO_NIGHT;
     lastNightState = isNight;
+    digitalWrite(AUD_CHANNEL_1_PIN, HIGH);
   } else {
     systemState = isNight ? STATE_NIGHT : STATE_DAY;
   }
@@ -771,19 +780,31 @@ void setup() {
   //在这里请求第一次温度
   temperatureSensor.requestTemperatures();
   temperatureRequested = true;
-  
+
+  audio_setup();
+
+  digitalWrite(AUD_CHANNEL_2_PIN, HIGH);
+  delay(2000);
+
+
+
 }
 
 void loop() { 
   if (temperatureRequested) {
-      if (millis() - lastUpdateTemp >= 1000) {
-          int_Temp = temperatureSensor.getTempCByIndex(0);
-          temperatureRequested = false; // 完成温度读取
-        
-          temperatureSensor.requestTemperatures();
-          lastUpdateTemp = millis();
-          temperatureRequested = true;
+    if (millis() - lastUpdateTemp >= 1000) {
+      int_Temp = temperatureSensor.getTempCByIndex(0);
+      if (int_Temp >= 30){
+        digitalWrite(AUD_CHANNEL_3_PIN, HIGH);
       }
+          
+      temperatureRequested = false; // 完成温度读取
+      temperatureSensor.requestTemperatures();
+      lastUpdateTemp = millis();
+      temperatureRequested = true;
+
+          
+    }
   }
 
   considerState();
@@ -799,7 +820,7 @@ void loop() {
   switch(now.day){
     case 7:
       dayNow = "Sunday";
-      break;
+      break; 
     case 1:
       dayNow = "Monday";
       break;
